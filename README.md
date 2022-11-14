@@ -18,6 +18,7 @@ $ npm install
 ```
 
 ## Running the app
+Please ensure that there is `.env` file containing the correct environment variables in the root folder of this repository when running it locally.
 
 You can run a development copy of this app with the following script:
 
