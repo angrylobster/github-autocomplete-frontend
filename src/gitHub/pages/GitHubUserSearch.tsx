@@ -1,21 +1,25 @@
-import { Alert, Box, Button, Snackbar, TextField, Typography } from '@mui/material';
-import axios from 'axios';
-import { useCallback, ChangeEvent, useState } from 'react';
+import { Alert, Box, Snackbar, Typography } from '@mui/material';
+import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import GitHubUserTable from '../components/GitHubUserTable';
+import { httpClient } from '../../clients/http';
+import { GitHubUserSearchForm } from '../components/GitHubUserSearchForm';
+import { GitHubUserTable } from '../components/GitHubUserTable';
+import { useAutocompleteUsers } from '../hooks/useAutocompleteUsers';
 import { GetGitHubUsersResponse, GitHubUser } from '../interfaces';
 
 export function GitHubUserSearch() {
-  const [searchParams, setSearchParams] = useSearchParams({ q: '' });
+  const [searchParams, setSearchParams] = useSearchParams({});
   const [users, setUsers] = useState<GitHubUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const [error, setError] = useState('');
+  const { autocompleteOptions, refreshAutocompleteOptions, clearAutocompleteOptions } =
+    useAutocompleteUsers();
 
   const fetchQueryResults = useCallback(() => {
     setIsLoading(true);
-    axios
-      .get<GetGitHubUsersResponse>('http://localhost:3000/github/search/users', {
+    httpClient
+      .get<GetGitHubUsersResponse>('/github/search/users', {
         params: searchParams
       })
       .then((response) => setUsers(response.data.items))
@@ -23,12 +27,11 @@ export function GitHubUserSearch() {
         setError(message);
         setIsSnackbarOpen(true);
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        clearAutocompleteOptions();
+        setIsLoading(false);
+      });
   }, [searchParams]);
-
-  const handleQueryChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setSearchParams({ q: e.target.value });
-  }, []);
 
   const closeSnackbar = useCallback(() => {
     setIsSnackbarOpen(false);
@@ -44,14 +47,19 @@ export function GitHubUserSearch() {
       flexDirection="column"
       rowGap={3}>
       <Typography variant="h5">GitHub User Search</Typography>
-      <TextField label="Username" value={searchParams.get('q')} onChange={handleQueryChange} />
 
-      <Button
-        variant="contained"
-        disabled={isLoading || !searchParams.get('q')}
-        onClick={fetchQueryResults}>
-        Search
-      </Button>
+      <Box display="flex" flexDirection="row" justifyContent="flex-end">
+        <GitHubUserSearchForm
+          handleInputChange={(_, value) => {
+            setSearchParams(value ? { q: value } : {});
+            refreshAutocompleteOptions(value);
+          }}
+          handleSearch={fetchQueryResults}
+          options={autocompleteOptions}
+          isLoading={isLoading}
+          value={searchParams.get('q') || ''}
+        />
+      </Box>
 
       <Snackbar
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}

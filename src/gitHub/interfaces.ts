@@ -10,3 +10,8 @@ export interface GetGitHubUsersResponse {
   incomplete_results: boolean;
   items: GitHubUser[];
 }
+
+export interface AutocompleteUser {
+  username: string;
+  avatar: string;
+}

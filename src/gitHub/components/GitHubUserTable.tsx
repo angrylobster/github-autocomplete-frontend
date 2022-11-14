@@ -30,7 +30,7 @@ const columns: GridColDef[] = [
   { field: 'score', headerName: 'Score', width: 75 }
 ];
 
-export default function GitHubUserTable({ rows = [] }: GitHubUserTableProps) {
+export function GitHubUserTable({ rows = [] }: GitHubUserTableProps) {
   return (
     <div style={{ height: 400, width: '100%' }}>
       <DataGrid rows={rows} columns={columns} pageSize={5} rowsPerPageOptions={[5]} />
